@@ -28,45 +28,53 @@ namespace JustGivingFetcher
 
             while (true)
             {
-                Log("Starting poll.");
+                try
+                {
+                    Log("Starting poll.");
 
-                // Get data from API.
-                var details = await JustGivingClient.GetPageDetails(AppId, PageName);
-                var donations = await JustGivingClient.GetDonations(AppId, PageName);
+                    // Get data from API.
+                    var details = await JustGivingClient.GetPageDetails(AppId, PageName);
+                    var donations = await JustGivingClient.GetDonations(AppId, PageName);
 
-                Log("Retrieved data.");
+                    Log("Retrieved data.");
 
-                // Get desired values.
-                var symbol = details.Value<string>("currencySymbol");
-                var target = details.Value<decimal>("fundraisingTarget");
-                var current = details.Value<decimal>("grandTotalRaisedExcludingGiftAid");
+                    // Get desired values.
+                    var symbol = details.Value<string>("currencySymbol");
+                    var target = details.Value<decimal>("fundraisingTarget");
+                    var current = details.Value<decimal>("grandTotalRaisedExcludingGiftAid");
 
-                var donationObjs = donations.Value<JArray>("donations");
-                var latestDonation = donationObjs.FirstOrDefault();
+                    var donationObjs = donations.Value<JArray>("donations");
+                    var latestDonation = donationObjs.FirstOrDefault();
 
-                var donationName = latestDonation?.Value<string>("donorDisplayName") ?? string.Empty;
-                var donationAmount = latestDonation?.Value<decimal>("donorLocalAmount") ?? 0;
-                var donationCurrency = latestDonation?.Value<string>("donorLocalCurrencyCode") ?? "";
+                    var donationName = latestDonation?.Value<string>("donorDisplayName") ?? string.Empty;
+                    var donationAmount = latestDonation?.Value<decimal>("donorLocalAmount") ?? 0;
+                    var donationCurrency = latestDonation?.Value<string>("donorLocalCurrencyCode") ?? "";
 
-                var currentText = $"{symbol}{current:N2}";
-                var targetText = $"{symbol}{target:N2}";
-                var combinedText = $"{currentText} / {targetText}";
-                var donationText = $"{donationName} - {donationAmount:N2} {donationCurrency}";
+                    var currentText = $"{symbol}{current:N2}";
+                    var targetText = $"{symbol}{target:N2}";
+                    var combinedText = $"{currentText} / {targetText}";
+                    var donationText = $"{donationName} - {donationAmount:N2} {donationCurrency}";
 
-                // Update text files.
-                File.WriteAllText(Path.Combine(OutputPath, "current.txt"), currentText);
-                Log($"Updating current.txt: {currentText}");
+                    // Update text files.
+                    File.WriteAllText(Path.Combine(OutputPath, "current.txt"), currentText);
+                    Log($"Updating current.txt: {currentText}");
                 
-                File.WriteAllText(Path.Combine(OutputPath, "target.txt"), targetText);
-                Log($"Updating target.txt: {targetText}");
+                    File.WriteAllText(Path.Combine(OutputPath, "target.txt"), targetText);
+                    Log($"Updating target.txt: {targetText}");
                 
-                File.WriteAllText(Path.Combine(OutputPath, "combined.txt"), combinedText);
-                Log($"Updating combined.txt: {combinedText}");
+                    File.WriteAllText(Path.Combine(OutputPath, "combined.txt"), combinedText);
+                    Log($"Updating combined.txt: {combinedText}");
                 
-                File.WriteAllText(Path.Combine(OutputPath, "donation.txt"), donationText);
-                Log($"Updating donation.txt: {donationText}");
+                    File.WriteAllText(Path.Combine(OutputPath, "donation.txt"), donationText);
+                    Log($"Updating donation.txt: {donationText}");
 
-                Log($"Sleeping for {pollRate:c}.");
+                    Log($"Sleeping for {pollRate:c}.");
+                }
+                catch (Exception e)
+                {
+                    // Log exception and continue.
+                    Log(e.Message);
+                }
 
                 // Sleep until next poll time.
                 Thread.Sleep(pollRate);
